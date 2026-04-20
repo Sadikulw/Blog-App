@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import toast, { Toaster } from "react-hot-toast";
-
+import toast from "react-hot-toast";
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -16,7 +15,7 @@ const Register = () => {
     }
 
     try {
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:5000/api/users/register",
         { email, password, fullName },
         { withCredentials: true }
@@ -36,7 +35,7 @@ const Register = () => {
 
   return (
    <div className="min-h-screen flex">
-         <Toaster position="top-right" />
+         
    
          
          <div className="w-full lg:w-1/2 flex items-center justify-center bg-base-100">

@@ -2,7 +2,7 @@ import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
-import { auth } from "../middleware/auth.js";
+import { isAuthenticated, optionalAuthenticate } from "../middleware/auth.js";
 
 const router = express.Router();
 
@@ -89,8 +89,23 @@ router.post("/logout", (req, res) => {
   res.status(200).json({ message: "Logout successful" });
 });
 
+// Current user (doesn't 401 when logged out)
+router.get("/me", optionalAuthenticate, async (req, res) => {
+  try {
+    if (!req.user?.id) {
+      res.status(200).json(null);
+      return;
+    }
 
-router.get("/", auth, async (req, res) => {
+    const user = await User.findById(req.user.id).select("-password");
+    res.status(200).json(user || null);
+  } catch {
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+router.get("/", isAuthenticated , async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
 

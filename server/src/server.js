@@ -1,6 +1,7 @@
 import express from 'express' 
 import dotenv from 'dotenv'
 import userRoute from './routes/userRoute.js'
+import blogRoute from './routes/blogRoute.js'
 import mongoose from 'mongoose'
 import connectDB from './config/db.js'
 import cors from 'cors'
@@ -14,6 +15,7 @@ app.use(cors({
   credentials: true
 }))
 app.use('/api/users', userRoute)
+app.use('/api/blogs', blogRoute) 
 dotenv.config()
 connectDB()
 
