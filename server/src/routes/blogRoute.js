@@ -2,6 +2,7 @@
 import express from "express";
 import { isAuthenticated } from "../Middleware/auth.js";
 import Blog from "../models/blog.js";
+import Comment from "../models/comment.js";
 const router = express.Router();
  
 router.get("/", async (req, res) => {
@@ -31,7 +32,15 @@ router.post("/new", isAuthenticated, async (req, res) => {
 });
 router.get("/:id", async (req, res) => {
   try {
-    const blog = await Blog.findById(req.params.id).populate("author", "name email fullName");
+    const blog = await Blog.findById(req.params.id)
+      .populate("author", "name email fullName")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "fullName email",
+        },
+      });
     if (!blog) {
       return res.status(404).json({ message: "Blog not found" });
     }
@@ -67,6 +76,7 @@ router.delete("/:id", isAuthenticated, async (req, res) => {
       return res.status(403).json({ message: "Not authorized" });
     }
 
+    await Comment.deleteMany({ blog: blog._id });
     await Blog.findByIdAndDelete(req.params.id);
 
     res.json({ message: "Blog deleted successfully" });

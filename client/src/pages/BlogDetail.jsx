@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { FaRegComment } from "react-icons/fa6";
+import { TbXboxXFilled } from "react-icons/tb";
 
 const BlogDetail = ({ user }) => {
   const { id } = useParams();
@@ -13,34 +14,29 @@ const BlogDetail = ({ user }) => {
   const [clickComment, setClickComment] = useState(false);
   const [comment, setComment] = useState("");
 
-
-  useEffect(() => {
-    const fetchBlog = async () => {
-      try {
-        const res = await axios.get(
-          `http://localhost:5000/api/blogs/${id}`
-        );
-        setBlog(res.data);
-      } catch (err) {
-        console.error("Error fetching blog", err);
-        setBlog(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBlog();
+  const fetchBlog = useCallback(async () => {
+    try {
+      const res = await axios.get(`http://localhost:5000/api/blogs/${id}`);
+      setBlog(res.data);
+    } catch (err) {
+      console.error("Error fetching blog", err);
+      setBlog(null);
+    } finally {
+      setLoading(false);
+    }
   }, [id]);
 
+  useEffect(() => {
+    fetchBlog();
+  }, [fetchBlog]);
 
-  const handleDelete = async () => {
+  const handleBlogDelete = async () => {
     if (!window.confirm("Are you sure you want to delete this blog?")) return;
 
     try {
-      await axios.delete(
-        `http://localhost:5000/api/blogs/${id}`,
-        { withCredentials: true }
-      );
+      await axios.delete(`http://localhost:5000/api/blogs/${id}`, {
+        withCredentials: true,
+      });
       toast.success("Blog deleted");
       navigate("/");
     } catch (err) {
@@ -49,98 +45,129 @@ const BlogDetail = ({ user }) => {
     }
   };
 
-
-  const handleCommentSubmit = () => {
-    if (!comment.trim()) {
-      toast.error("Comment cannot be empty");
-      return;
-    }
-
-    
-    console.log("Comment:", comment);
-
-    toast.success("Comment added (frontend only)");
-    setComment("");
-  };
-
-
   const handleKeyDown = (e) => {
     if (e.key === "Enter") {
       handleCommentSubmit();
     }
   };
 
-  if (loading) return <h2 className="text-center mt-10">Loading...</h2>;
-  if (!blog) return <h2 className="text-center mt-10">Blog not found</h2>;
+  const handleCommentSubmit = async () => {
+    if (!comment.trim()) {
+      toast.error("Comment cannot be empty");
+      return;
+    }
+
+    if (!user) {
+      toast.error("You must be logged in to comment");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      await axios.post(
+        "http://localhost:5000/api/comments",
+        { content: comment, blogId: id },
+        { withCredentials: true },
+      );
+      toast.success("Comment added");
+      setComment("");
+      await fetchBlog();
+    } catch (err) {
+      console.error("Comment submission failed", err);
+      toast.error(err.response?.data?.message || "Failed to add comment");
+    }
+  };
+
+  const handleCommentDelete = async (commentId) => {
+    if (!window.confirm("Delete this comment?")) return;
+
+    try {
+      await axios.delete(`http://localhost:5000/api/comments/${commentId}`, {
+        withCredentials: true,
+      });
+      toast.success("Comment deleted");
+      await fetchBlog();
+    } catch (err) {
+      console.error("Comment deletion failed", err);
+      toast.error(err.response?.data?.message || "Failed to delete comment");
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+        Loading...
+      </div>
+    );
+  }
+  if (!blog) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+        Blog not found
+      </div>
+    );
+  }
 
   const isOwner =
     user && blog.author && String(user._id) === String(blog.author._id);
+  const comments = blog.comments ?? [];
 
   return (
-    <div className="p-6 max-w-3xl mx-auto bg-white rounded-2xl shadow-lg my-10">
-  
-      <Link to="/" className="text-blue-500 hover:underline">
-        ⬅️ Back
+    <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-6">
+      <div className="mx-auto my-6 max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+      <Link to="/" className="text-sm font-medium text-slate-600 hover:underline">
+        {"<-"} Back
       </Link>
 
-     
-      <h1 className="mt-4 text-3xl font-bold text-gray-800">
-        {blog.title}
-      </h1>
+      <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">{blog.title}</h1>
 
-   
-      <p className="mt-2 text-gray-500 text-sm">
+      <p className="mt-2 text-sm text-slate-500">
         By {blog.author?.fullName || "Unknown"} •{" "}
         {new Date(blog.createdAt).toDateString()}
       </p>
-
 
       {blog.image && (
         <img
           src={blog.image}
           alt={blog.title}
-          className="my-5 rounded-xl w-full object-cover max-h-[400px]"
+          className="my-5 max-h-[400px] w-full rounded-xl object-cover"
         />
       )}
 
-     
-      <p className="mt-4 text-lg leading-relaxed text-gray-700">
+      <p className="mt-4 text-lg leading-relaxed text-slate-700">
         {blog.content}
       </p>
-
 
       {isOwner && (
         <div className="mt-6 flex gap-3">
           <button
-            className="px-4 py-2 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition"
+            className="rounded-xl bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700"
             onClick={() => navigate(`/blogs/${blog._id}/edit`)}
           >
             Edit
           </button>
 
           <button
-            className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition"
-            onClick={handleDelete}
+            className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-red-600 transition hover:bg-red-100"
+            onClick={handleBlogDelete}
           >
             Delete
           </button>
         </div>
       )}
 
-    
       {!clickComment && (
         <button
-          className="mt-6 flex items-center gap-2 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-full transition"
+          className="mt-6 flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 transition hover:bg-slate-200"
           onClick={() => setClickComment(true)}
         >
           <FaRegComment /> Comment
         </button>
       )}
 
-     
       {clickComment && (
-        <div className="mt-10 border-t pt-6">
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">
+        <div className="mt-10 border-t border-slate-200 pt-6">
+          <h3 className="mb-3 text-lg font-semibold text-slate-700">
             Add a Comment
           </h3>
 
@@ -151,18 +178,60 @@ const BlogDetail = ({ user }) => {
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="w-full px-4 py-3 pr-28 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-orange-400 shadow-sm"
+              className="w-full rounded-full border border-slate-200 px-4 py-3 pr-28 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             />
 
             <button
               onClick={handleCommentSubmit}
-              className="absolute right-1 top-1 bottom-1 px-5 bg-orange-500 text-white rounded-full hover:bg-orange-600 transition"
+              className="absolute bottom-1 right-1 top-1 rounded-full bg-slate-900 px-5 text-white transition hover:bg-slate-700"
             >
               Submit
             </button>
           </div>
         </div>
       )}
+      <div className="mt-10">
+        <h3 className="mb-4 border-b border-slate-200 pb-2 text-xl font-bold text-slate-900">
+          Comments
+        </h3>
+
+        {comments.length > 0 ? (
+          <ul className="space-y-4">
+            {comments.map((commentItem) => (
+              <li
+                key={commentItem._id}
+                className="flex items-start justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+              >
+                <div>
+                  <p className="text-base text-slate-800">
+                    {commentItem.content}
+                  </p>
+
+                  <p className="mt-2 text-sm text-slate-500">
+                    <span className="font-medium text-slate-700">
+                      {commentItem.author?.fullName || "Unknown"}
+                    </span>{" "}
+                    • {new Date(commentItem.createdAt).toLocaleString()}
+                  </p>
+                </div>
+
+                {String(commentItem.author?._id) === String(user?._id) && (
+                  <button
+                    onClick={() => handleCommentDelete(commentItem._id)}
+                    className="ml-4 text-red-500 transition hover:text-red-700"
+                    title="Delete comment"
+                  >
+                    <TbXboxXFilled size={20} />
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-slate-500">No comments yet</p>
+        )}
+      </div>
+      </div>
     </div>
   );
 };

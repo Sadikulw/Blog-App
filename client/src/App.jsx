@@ -14,7 +14,8 @@ const App = () => {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-    useEffect(() => {
+
+  useEffect(() => {
     const getUser = async () => {
       try {
         const res = await axios.get(
@@ -31,11 +32,22 @@ const App = () => {
 
     getUser();
   }, []);
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-gray-600">
+        Loading...
+      </div>
+    );
+  }
+
   return (
     
     <div>
         <Toaster position="top-right" />
-      <NavBar user={user} setUser={setUser} />
+      <NavBar
+        user={user}
+        setUser={setUser}
+      />
       <Routes>
           <Route path='/' element={<Home />} />
         <Route path='/login' element={<Login setUser={setUser} />} />

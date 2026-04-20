@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import toast from "react-hot-toast";
+
 const Register = () => {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -9,103 +10,100 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleRegister = async () => {
-    if (!email || !password || !fullName) {
-      toast.error("All fields are required");
+    if (!fullName || !email || !password) {
+      toast.error("All fields required");
       return;
     }
 
     try {
       await axios.post(
         "http://localhost:5000/api/users/register",
-        { email, password, fullName },
+        { fullName, email, password },
         { withCredentials: true }
       );
 
-      toast.success("Registration successful");
+      toast.success("Account created 🎉");
       navigate("/login");
-
     } catch (error) {
-      if (error.response) {
-        toast.error(error.response.data.message);
-      } else {
-        toast.error("Server error");
-      }
+      toast.error(error.response?.data?.message || "Error");
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleRegister();
     }
   };
 
   return (
-   <div className="min-h-screen flex">
-         
-   
-         
-         <div className="w-full lg:w-1/2 flex items-center justify-center bg-base-100">
-           <div className="w-full max-w-md p-8">
-             
-             <h2 className="text-3xl font-bold text-center mb-2">Register</h2>
-             <p className="text-center text-gray-500 mb-6">
-               Welcome! Please register to create your account
-             </p>
-   
-            
-            
-             <div className="form-control mb-4">
-               <input
-                 type="text"
-                 placeholder="Full Name"
-                 className="input input-bordered w-full"
-                 value={fullName}
-                 onChange={(e) => setFullName(e.target.value)}
-               />
-             </div>
-             <div className="form-control mb-4">
-               <input
-                 type="email"
-                 placeholder="Email"
-                 className="input input-bordered w-full"
-                 value={email}
-                 onChange={(e) => setEmail(e.target.value)}
-               />
-             </div>
-   
-             <div className="form-control mb-4">
-               <input
-                 type="password"
-                 placeholder="Password"
-                 className="input input-bordered w-full"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-               />
-             </div>
-           
-             <button
-               onClick={handleRegister}
-               className="btn btn-primary w-full mb-4"
-             >
-               Register Now
-             </button>
-             <p className="text-center text-gray-500">
-               Already have an account?{" "}
-               <span
-                 onClick={() => navigate("/login")}
-                 className="text-blue-500 cursor-pointer"
-               >
-                 Login
-               </span>
-             </p>
-           </div>
-         </div>  
-         
-         <div className="hidden lg:flex w-1/2 bg-gradient-to-br from-purple-600 to-indigo-600 items-center justify-center">
-           <div className="text-white text-center p-10">
-             <h1 className="text-4xl font-bold mb-4">
-                Join Us Today 👋
-             </h1>
-             <p className="opacity-80">
-               Register to get started with our platform
-             </p>
-           </div>
-         </div>
-       </div>
+    <div className="flex min-h-screen bg-slate-50 text-slate-900">
+
+      <div className="hidden w-1/2 items-center justify-center bg-slate-900 p-10 text-white lg:flex">
+        <div>
+          <h1 className="mb-4 text-5xl font-extrabold">
+            Start your journey with
+            <span className="text-orange-500">writeHub</span>
+          </h1>
+          <p className="text-lg text-slate-300">
+            Create, share, and explore blogs from developers worldwide.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex w-full items-center justify-center px-4 py-10 lg:w-1/2">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
+
+          <h2 className="mb-2 text-center text-3xl font-black text-slate-900">
+            Create Account
+          </h2>
+          <p className="mb-6 text-center text-sm text-slate-500">
+            Join and start publishing your ideas.
+          </p>
+
+          <input
+            type="text"
+            placeholder="Full Name"
+            className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 placeholder-slate-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+
+          <input
+            type="email"
+            placeholder="Email"
+            className="mb-4 w-full rounded-xl border border-slate-200 px-4 py-3 placeholder-slate-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+
+          <input
+            type="password"
+            placeholder="Password"
+            className="mb-6 w-full rounded-xl border border-slate-200 px-4 py-3 placeholder-slate-400 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={handleKeyDown}
+          />
+
+          <button
+            onClick={handleRegister}
+            className="w-full rounded-xl bg-slate-900 py-3 font-semibold text-white transition hover:bg-slate-700"
+          >
+            Register
+          </button>
+
+          <p className="mt-5 text-center text-sm text-slate-500">
+            Already have an account?{" "}
+            <Link to="/login" className="font-semibold text-orange-500 hover:underline">
+              Login
+            </Link>
+          </p>
+
+        </div>
+      </div>
+    </div>
   );
 };
 
