@@ -48,4 +48,61 @@
 - JWT
 - bcryptjs
 
+
+
+## 📁 Project Structure
 ---
+blog-app/
+│
+├── client/
+├── server/
+├── image/
+└── README.md
+
+
+---
+
+## ⚙️ Installation
+
+```bash
+git clone https://github.com/your-username/blog-app.git
+cd blog-app
+Install Dependencies
+cd server
+npm install
+cd client
+npm install
+🔑 Environment Variables
+
+Create .env in server/
+
+PORT=5000
+MONGO_URI=your_mongodb_url
+JWT_SECRET=your_secret
+CLIENT_URL=http://localhost:5173
+▶️ Run Project
+cd server
+npm run dev
+cd client
+npm run dev
+📡 API Routes
+
+Auth
+
+POST /api/register
+POST /api/login
+GET /api/me
+
+Blogs
+
+GET /api/blogs
+POST /api/blogs
+PUT /api/blogs/:id
+DELETE /api/blogs/:id
+
+
+---
+
+If your images don’t show, it’s usually because of wrong file names — match them exactly with your `image/` folder.
+
+Want me to :contentReference[oaicite:0]{index=0}?
