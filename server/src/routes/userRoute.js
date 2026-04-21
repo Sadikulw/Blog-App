@@ -6,7 +6,6 @@ import { isAuthenticated, optionalAuthenticate } from "../Middleware/auth.js";
 
 const router = express.Router();
 
-
 router.post("/register", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -67,8 +66,8 @@ router.post("/login", async (req, res) => {
 
     res.cookie("token", token, {
       httpOnly: true,
-      sameSite: "strict",
-      secure: false,
+      secure: true,
+      sameSite: "None",
     });
 
     const userData = await User.findById(user._id).select("-password");
@@ -82,18 +81,19 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 router.post("/logout", (req, res) => {
-  res.clearCookie("token");
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: true,
+    sameSite: "None",
+  });
   res.status(200).json({ message: "Logout successful" });
 });
-
 
 router.get("/me", optionalAuthenticate, async (req, res) => {
   try {
     if (!req.user?.id) {
-      res.status(200).json(null);
-      return;
+      return res.status(200).json(null);
     }
 
     const user = await User.findById(req.user.id).select("-password");
@@ -103,8 +103,7 @@ router.get("/me", optionalAuthenticate, async (req, res) => {
   }
 });
 
-
-router.get("/", isAuthenticated , async (req, res) => {
+router.get("/", isAuthenticated, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select("-password");
 
