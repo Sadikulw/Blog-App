@@ -30,7 +30,7 @@ const Addblogs = () => {
         formData.append("image", image);
       }
       const res = await axios.post(
-        "http://localhost:5000/api/blogs/new",
+        "/api/blogs/new",
         formData,
         { withCredentials: true },
       );

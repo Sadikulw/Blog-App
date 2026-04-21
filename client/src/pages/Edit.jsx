@@ -16,7 +16,7 @@ const Edit = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/blogs/${id}`);
+        const res = await axios.get(`/api/blogs/${id}`);
         setTitle(res.data.title);
         setContent(res.data.content);
         setCurrentImage(res.data.image || "");
@@ -43,7 +43,7 @@ const Edit = () => {
 
     try {
       await axios.put(
-        `http://localhost:5000/api/blogs/${id}`,
+        `/api/blogs/${id}`,
         formData,
         { withCredentials: true },
       );

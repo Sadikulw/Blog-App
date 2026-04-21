@@ -10,7 +10,7 @@ const NavBar = ({ user, setUser }) => {
   const logout = async () => {
     try {
       await axios.post(
-        "http://localhost:5000/api/users/logout",
+        "/api/users/logout",
         {},
         { withCredentials: true }
       );

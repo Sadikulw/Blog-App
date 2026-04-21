@@ -19,7 +19,7 @@ const BlogDetail = ({ user }) => {
 
   const fetchBlog = useCallback(async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/blogs/${id}`);
+      const res = await axios.get(`/api/blogs/${id}`);
 
       setBlog(res.data);
     } catch (err) {
@@ -32,7 +32,7 @@ const BlogDetail = ({ user }) => {
 
   const fetchBlogs = useCallback(async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/blogs");
+      const res = await axios.get("/api/blogs");
       setBlogs(res.data);
     } catch (err) {
       console.error("Error fetching blogs", err);
@@ -61,7 +61,7 @@ const BlogDetail = ({ user }) => {
     setDelLoading(true);
 
     try {
-      await axios.delete(`http://localhost:5000/api/blogs/${id}`, {
+      await axios.delete(`/api/blogs/${id}`, {
         withCredentials: true,
       });
       toast.success("Blog deleted");
@@ -97,7 +97,7 @@ const BlogDetail = ({ user }) => {
     try {
       setCommentLoading(true);
       await axios.post(
-        "http://localhost:5000/api/comments",
+        "/api/comments",
         { content: comment, blogId: id },
         { withCredentials: true },
       );
@@ -116,7 +116,7 @@ const BlogDetail = ({ user }) => {
     if (!window.confirm("Delete this comment?")) return;
 
     try {
-      await axios.delete(`http://localhost:5000/api/comments/${commentId}`, {
+      await axios.delete(`/api/comments/${commentId}`, {
         withCredentials: true,
       });
       toast.success("Comment deleted");

@@ -19,7 +19,7 @@ const App = () => {
     const getUser = async () => {
       try {
         const res = await axios.get(
-          "http://localhost:5000/api/users/me",
+          "/api/users/me",
           { withCredentials: true }
         );
         setUser(res.data);
