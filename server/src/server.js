@@ -10,8 +10,20 @@ const app = express()
 //middleware
 app.use(express.json())
 app.use(cookieParser())
+
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://blog-app-client-0c3t.onrender.com"
+];
+
 app.use(cors({
-  origin: "*",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 app.use('/api/users', userRoute)
