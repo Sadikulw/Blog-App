@@ -1,12 +1,12 @@
 import express from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
+import User from "../models/user.js";
 import { isAuthenticated, optionalAuthenticate } from "../middleware/auth.js";
 
 const router = express.Router();
 
-// REGISTER
+
 router.post("/register", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -41,7 +41,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// LOGIN
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -83,13 +82,13 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// LOGOUT
+
 router.post("/logout", (req, res) => {
   res.clearCookie("token");
   res.status(200).json({ message: "Logout successful" });
 });
 
-// Current user (doesn't 401 when logged out)
+
 router.get("/me", optionalAuthenticate, async (req, res) => {
   try {
     if (!req.user?.id) {

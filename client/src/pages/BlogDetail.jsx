@@ -15,10 +15,12 @@ const BlogDetail = ({ user }) => {
   const [clickComment, setClickComment] = useState(false);
   const [comment, setComment] = useState("");
   const [commentLoading, setCommentLoading] = useState(false);
+  const [blogs, setBlogs] = useState([]);
 
   const fetchBlog = useCallback(async () => {
     try {
       const res = await axios.get(`http://localhost:5000/api/blogs/${id}`);
+
       setBlog(res.data);
     } catch (err) {
       console.error("Error fetching blog", err);
@@ -28,9 +30,29 @@ const BlogDetail = ({ user }) => {
     }
   }, [id]);
 
+  const fetchBlogs = useCallback(async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/blogs");
+      setBlogs(res.data);
+    } catch (err) {
+      console.error("Error fetching blogs", err);
+      setBlogs([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchBlog();
-  }, [fetchBlog]);
+    fetchBlogs();
+  }, [fetchBlog, fetchBlogs]);
+
+  const relatedBlogs = blogs.filter((b) => {
+    if (!blog?.tags) return false;
+
+    if (Array.isArray(blog.tags) && Array.isArray(b.tags)) {
+      return b.tags.some((tag) => blog.tags.includes(tag));
+    }
+    return b.tags === blog.tags;
+  });
 
   const handleBlogDelete = async () => {
     if (delLoading) return;
@@ -157,7 +179,22 @@ const BlogDetail = ({ user }) => {
         <p className="mt-4 whitespace-pre-line text-lg leading-relaxed text-slate-700">
           {blog.content}
         </p>
-
+        <div className="flex flex-wrap gap-2 mt-2">
+          {Array.isArray(blog.tags) ? (
+            blog.tags.map((tag, index) => (
+              <span
+                key={index}
+                className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600 hover:bg-orange-200 transition cursor-pointer"
+              >
+                #{tag}
+              </span>
+            ))
+          ) : (
+            <span className="rounded-full bg-orange-100 px-3 py-1 text-xs font-semibold text-orange-600">
+              #{blog.tags}
+            </span>
+          )}
+        </div>
         {isOwner && (
           <div className="mt-6 flex gap-3">
             <button
@@ -260,6 +297,60 @@ const BlogDetail = ({ user }) => {
           ) : (
             <p className="text-sm text-slate-500">No comments yet</p>
           )}
+        </div>
+        <div className="mt-12">
+          <h3 className="mb-6 text-2xl font-bold text-slate-900">
+            Related Blogs
+          </h3>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {relatedBlogs
+              .filter((item) => item._id !== blog._id)
+              .map((item) => (
+                <Link
+                  key={item._id}
+                  to={`/blogs/${item._id}`}
+                  className="group flex flex-col rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-lg transition overflow-hidden"
+                >
+             
+                  <div className="h-44 w-full bg-slate-100 overflow-hidden flex items-center justify-center">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.title}
+                        className="h-full w-full object-cover group-hover:scale-105 transition"
+                      />
+                    ) : (
+                      <div className="text-slate-400 text-sm">No Image</div>
+                    )}
+                  </div>
+
+                  <div className="flex flex-col flex-grow p-4">
+                    <h4 className="text-lg font-semibold text-slate-800 line-clamp-2">
+                      {item.title}
+                    </h4>
+
+                    <p className="mt-2 text-sm text-slate-600 line-clamp-3">
+                      {item.content}
+                    </p>
+
+                 
+                    <div className="mt-auto pt-4 flex flex-wrap gap-2">
+                      {(Array.isArray(item.tags) ? item.tags : [item.tags]).map(
+                        (tag, i) => (
+                          <span
+                            key={i}
+                            className="text-xs bg-orange-100 text-orange-600 px-2 py-1 rounded-full"
+                          >
+                            #{tag}
+                          </span>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+          </div>
         </div>
       </div>
     </div>

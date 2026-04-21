@@ -42,6 +42,7 @@ router.post(
     try {
       const title = req.body.title?.trim();
       const content = req.body.content?.trim();
+      const tags = req.body.tags?.split(",").map((tag) => tag.trim());
 
       if (!title || !content) {
         return res.status(400).json({ message: "Title and content are required" });
@@ -50,6 +51,7 @@ router.post(
       const newBlog = new Blog({
         title,
         content,
+        tags:tags,
         image: req.file ? req.file.path : null,
         imagePublicId: req.file ? req.file.filename : null,
         author: req.user.id,
