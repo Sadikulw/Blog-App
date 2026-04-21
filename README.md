@@ -1,8 +1,8 @@
 # 🚀 Blog App – Full Stack Blogging Platform
 
-<p align="center">
-  <img src="./image/Screenshot 2026-04-21 192737" alt="Blog App Banner"/>
-</p>
+## 📸 Preview
+![App Screenshot](./image/<img width="2860" height="1460" alt="Screenshot 2026-04-21 192737" src="https://github.com/user-attachments/assets/d1d2550c-be24-44b8-a2af-46d50fe15eac" />
+)
 
 <p align="center">
   <b>A modern full-stack blogging platform built with MERN stack</b><br/>
