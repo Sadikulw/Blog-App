@@ -11,8 +11,10 @@ const BlogDetail = ({ user }) => {
 
   const [blog, setBlog] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [delLoading, setDelLoading] = useState(false);
   const [clickComment, setClickComment] = useState(false);
   const [comment, setComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
 
   const fetchBlog = useCallback(async () => {
     try {
@@ -31,7 +33,10 @@ const BlogDetail = ({ user }) => {
   }, [fetchBlog]);
 
   const handleBlogDelete = async () => {
+    if (delLoading) return;
     if (!window.confirm("Are you sure you want to delete this blog?")) return;
+
+    setDelLoading(true);
 
     try {
       await axios.delete(`http://localhost:5000/api/blogs/${id}`, {
@@ -40,18 +45,22 @@ const BlogDetail = ({ user }) => {
       toast.success("Blog deleted");
       navigate("/");
     } catch (err) {
+      setDelLoading(false);
       console.error("Delete failed", err);
       toast.error("Failed to delete blog");
     }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === "Enter") {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
       handleCommentSubmit();
     }
   };
 
   const handleCommentSubmit = async () => {
+    if (commentLoading) return;
+
     if (!comment.trim()) {
       toast.error("Comment cannot be empty");
       return;
@@ -64,6 +73,7 @@ const BlogDetail = ({ user }) => {
     }
 
     try {
+      setCommentLoading(true);
       await axios.post(
         "http://localhost:5000/api/comments",
         { content: comment, blogId: id },
@@ -75,6 +85,8 @@ const BlogDetail = ({ user }) => {
     } catch (err) {
       console.error("Comment submission failed", err);
       toast.error(err.response?.data?.message || "Failed to add comment");
+    } finally {
+      setCommentLoading(false);
     }
   };
 
@@ -100,6 +112,7 @@ const BlogDetail = ({ user }) => {
       </div>
     );
   }
+
   if (!blog) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
@@ -111,126 +124,143 @@ const BlogDetail = ({ user }) => {
   const isOwner =
     user && blog.author && String(user._id) === String(blog.author._id);
   const comments = blog.comments ?? [];
+  const createdAt = blog.createdAt
+    ? new Date(blog.createdAt).toDateString()
+    : "Unknown date";
 
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-6">
       <div className="mx-auto my-6 max-w-3xl rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-      <Link to="/" className="text-sm font-medium text-slate-600 hover:underline">
-        {"<-"} Back
-      </Link>
-
-      <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">{blog.title}</h1>
-
-      <p className="mt-2 text-sm text-slate-500">
-        By {blog.author?.fullName || "Unknown"} •{" "}
-        {new Date(blog.createdAt).toDateString()}
-      </p>
-
-      {blog.image && (
-        <img
-          src={blog.image}
-          alt={blog.title}
-          className="my-5 max-h-[400px] w-full rounded-xl object-cover"
-        />
-      )}
-
-      <p className="mt-4 text-lg leading-relaxed text-slate-700">
-        {blog.content}
-      </p>
-
-      {isOwner && (
-        <div className="mt-6 flex gap-3">
-          <button
-            className="rounded-xl bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700"
-            onClick={() => navigate(`/blogs/${blog._id}/edit`)}
-          >
-            Edit
-          </button>
-
-          <button
-            className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-red-600 transition hover:bg-red-100"
-            onClick={handleBlogDelete}
-          >
-            Delete
-          </button>
-        </div>
-      )}
-
-      {!clickComment && (
-        <button
-          className="mt-6 flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 transition hover:bg-slate-200"
-          onClick={() => setClickComment(true)}
+        <Link
+          to="/"
+          className="text-sm font-medium text-slate-600 hover:underline"
         >
-          <FaRegComment /> Comment
-        </button>
-      )}
+          {"<-"} Back
+        </Link>
 
-      {clickComment && (
-        <div className="mt-10 border-t border-slate-200 pt-6">
-          <h3 className="mb-3 text-lg font-semibold text-slate-700">
-            Add a Comment
-          </h3>
+        <h1 className="mt-4 text-3xl font-black tracking-tight text-slate-900">
+          {blog.title}
+        </h1>
 
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Write your comment..."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="w-full rounded-full border border-slate-200 px-4 py-3 pr-28 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
-            />
+        <p className="mt-2 text-sm text-slate-500">
+          By {blog.author?.fullName || "Unknown"} | {createdAt}
+        </p>
+
+        {blog.image && (
+          <img
+            src={blog.image}
+            alt={blog.title}
+            className="my-5 max-h-[400px] w-full rounded-xl object-cover"
+          />
+        )}
+
+        <p className="mt-4 whitespace-pre-line text-lg leading-relaxed text-slate-700">
+          {blog.content}
+        </p>
+
+        {isOwner && (
+          <div className="mt-6 flex gap-3">
+            <button
+              className="rounded-xl bg-slate-900 px-4 py-2 text-white transition hover:bg-slate-700"
+              onClick={() => navigate(`/blogs/${blog._id}/edit`)}
+            >
+              Edit
+            </button>
 
             <button
-              onClick={handleCommentSubmit}
-              className="absolute bottom-1 right-1 top-1 rounded-full bg-slate-900 px-5 text-white transition hover:bg-slate-700"
+              className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-70"
+              onClick={handleBlogDelete}
+              disabled={delLoading}
             >
-              Submit
+              {delLoading && (
+                <span className="h-4 w-4 animate-spin rounded-full border-2 border-red-500/30 border-t-red-500" />
+              )}
+              {delLoading ? "Deleting..." : "Delete"}
             </button>
           </div>
-        </div>
-      )}
-      <div className="mt-10">
-        <h3 className="mb-4 border-b border-slate-200 pb-2 text-xl font-bold text-slate-900">
-          Comments
-        </h3>
-
-        {comments.length > 0 ? (
-          <ul className="space-y-4">
-            {comments.map((commentItem) => (
-              <li
-                key={commentItem._id}
-                className="flex items-start justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <div>
-                  <p className="text-base text-slate-800">
-                    {commentItem.content}
-                  </p>
-
-                  <p className="mt-2 text-sm text-slate-500">
-                    <span className="font-medium text-slate-700">
-                      {commentItem.author?.fullName || "Unknown"}
-                    </span>{" "}
-                    • {new Date(commentItem.createdAt).toLocaleString()}
-                  </p>
-                </div>
-
-                {String(commentItem.author?._id) === String(user?._id) && (
-                  <button
-                    onClick={() => handleCommentDelete(commentItem._id)}
-                    className="ml-4 text-red-500 transition hover:text-red-700"
-                    title="Delete comment"
-                  >
-                    <TbXboxXFilled size={20} />
-                  </button>
-                )}
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-slate-500">No comments yet</p>
         )}
-      </div>
+
+        {!clickComment && (
+          <button
+            className="mt-6 flex items-center gap-2 rounded-full border border-slate-200 bg-slate-100 px-4 py-2 transition hover:bg-slate-200"
+            onClick={() => setClickComment(true)}
+          >
+            <FaRegComment /> Comment
+          </button>
+        )}
+
+        {clickComment && (
+          <div className="mt-10 border-t border-slate-200 pt-6">
+            <h3 className="mb-3 text-lg font-semibold text-slate-700">
+              Add a Comment
+            </h3>
+
+            <div className="relative w-full max-w-md">
+              <input
+                type="text"
+                placeholder="Write your comment..."
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                onKeyDown={handleKeyDown}
+                disabled={commentLoading}
+                className="w-full rounded-full border border-slate-200 px-4 py-3 pr-28 shadow-sm outline-none focus:border-orange-400 focus:ring-2 focus:ring-orange-100 disabled:cursor-not-allowed disabled:bg-slate-100"
+              />
+
+              <button
+                onClick={handleCommentSubmit}
+                disabled={commentLoading}
+                className="absolute bottom-1 right-1 top-1 rounded-full bg-slate-900 px-5 text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:bg-slate-500"
+              >
+                {commentLoading ? "Posting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-10">
+          <h3 className="mb-4 border-b border-slate-200 pb-2 text-xl font-bold text-slate-900">
+            Comments
+          </h3>
+
+          {comments.length > 0 ? (
+            <ul className="space-y-4">
+              {comments.map((commentItem) => (
+                <li
+                  key={commentItem._id}
+                  className="flex items-start justify-between rounded-xl border border-slate-200 bg-slate-50 p-4"
+                >
+                  <div>
+                    <p className="text-base text-slate-800">
+                      {commentItem.content}
+                    </p>
+
+                    <p className="mt-2 text-sm text-slate-500">
+                      <span className="font-medium text-slate-700">
+                        {commentItem.author?.fullName || "Unknown"}
+                      </span>{" "}
+                      |{" "}
+                      {commentItem.createdAt
+                        ? new Date(commentItem.createdAt).toLocaleString()
+                        : "Unknown time"}
+                    </p>
+                  </div>
+
+                  {String(commentItem.author?._id) === String(user?._id) && (
+                    <button
+                      onClick={() => handleCommentDelete(commentItem._id)}
+                      className="ml-4 text-red-500 transition hover:text-red-700"
+                      title="Delete comment"
+                    >
+                      <TbXboxXFilled size={20} />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-sm text-slate-500">No comments yet</p>
+          )}
+        </div>
       </div>
     </div>
   );

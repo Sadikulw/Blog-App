@@ -9,6 +9,8 @@ const Edit = () => {
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [image, setImage] = useState(null);
+  const [currentImage, setCurrentImage] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,6 +19,7 @@ const Edit = () => {
         const res = await axios.get(`http://localhost:5000/api/blogs/${id}`);
         setTitle(res.data.title);
         setContent(res.data.content);
+        setCurrentImage(res.data.image || "");
       } catch (err) {
         console.error(err);
       } finally {
@@ -30,10 +33,18 @@ const Edit = () => {
   const handleUpdate = async (e) => {
     e.preventDefault();
 
+    const formData = new FormData();
+    formData.append("title", title);
+    formData.append("content", content);
+
+    if (image) {
+      formData.append("image", image);
+    }
+
     try {
       await axios.put(
         `http://localhost:5000/api/blogs/${id}`,
-        { title, content },
+        formData,
         { withCredentials: true },
       );
 
@@ -86,6 +97,21 @@ const Edit = () => {
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Write your content..."
+          />
+
+          {currentImage && (
+            <img
+              src={currentImage}
+              alt={title}
+              className="mb-4 h-48 w-full rounded-xl object-cover"
+            />
+          )}
+
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/jpg"
+            className="mb-6 w-full text-sm text-gray-500 file:mr-4 file:rounded-full file:border-0 file:bg-orange-100 file:px-4 file:py-2 file:font-semibold file:text-orange-600 hover:file:bg-orange-200"
+            onChange={(e) => setImage(e.target.files?.[0] || null)}
           />
 
           <button
